@@ -62,40 +62,51 @@ $watermark = 0;
 function molpress_shortcode_molecule($atts = [], $content = null, $tag = '')
 {
     global $watermark;
-
-    // normalize attribute keys, lowercase
-    // nah
-    //$atts = array_change_key_case((array)$atts, CASE_LOWER);
- 
-    // override default attributes with user attributes
-    #$wporg_atts = shortcode_atts([
-    #                                 'title' => 'WordPress.org',
-    #                             ], $atts, $tag);
- 
-    // start output
-    $o = '';
- 
-    // start box
     $watermark++;
+
+    $o = '';
     $id = 'molecule' . $watermark;
     $o .= '<span id="' . $id . '" style="display: none;">';
  
-    if (!is_null($content))
-    {
-    	$o .= '<pre>' . $content . '</pre>';
-    }
- 
-    // end box
+    if (!is_null($content)) $o .= '<pre>' . $content . '</pre>';
+
     $o .= '</span>';
     $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderMolecule("' . $id . '",' . json_encode($atts) . ');});</script>';
  
-    // return output
+    return $o;
+}
+
+function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
+{
+    global $watermark;
+    $watermark++;
+
+    $o = '';
+    $id = 'collection' . $watermark;
+    $o .= '<span id="' . $id . '" style="display: none;">';
+ 
+    if (!is_null($content)) $o .= '<script type="text/xml">' . $content . '</script>';
+
+    $o .= '</span>';
+    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderCollection("' . $id . '",' . json_encode($atts) . ');});</script>';
+ 
     return $o;
 }
 
 function molpress_shortcode_init()
 {
     add_shortcode('molecule', 'molpress_shortcode_molecule');
+    add_shortcode('collection', 'molpress_shortcode_collection');
+}
+
+function molpress_mime_types($mime_types)
+{
+    $mime_types['svg'] = 'image/svg+xml';
+    $mime_types['el'] = 'chemical/x-sketchel'; 
+    $mime_types['mol'] = 'chemical/x-mdl-molfile'; 
+    $mime_types['ds'] = 'chemical/x-datasheet'; 
+    $mime_types['sdf'] = 'chemical/x-mdl-sdfile'; 
+    return $mime_types;
 }
 
 wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'webmolkit-build.js');
@@ -103,5 +114,7 @@ wp_enqueue_script('webmolkit2', plugin_dir_url(__FILE__) . 'molpress.js');
 
 add_action( 'admin_head', 'molpress_css' );
 add_action( 'init', 'molpress_shortcode_init' );
+
+add_filter('upload_mimes', 'molpress_mime_types', 1, 1);
 
 ?>

@@ -30,3 +30,34 @@ function molpress_RenderMolecule(id, options)
     new EmbedMolecule(molstr, options).render(span);
 	span.css('display', 'block');
 }
+
+// render a collection of molecular objects and miscellany, using the given parameters: see the EmbedCollection class for details
+function molpress_RenderCollection(id, options)
+{
+    if (!options) options = {};
+	let span = $('#' + id);
+
+    // if a source is provided, fetch that and plug it in
+    if (options.source)
+    {
+        span.empty();
+        $.ajax(
+        {
+            'url': options.source, 
+            'type': 'GET',
+            'dataType': 'text',
+            'success': function(datastr)
+            {
+                new EmbedCollection(datastr, options).render(span);
+                span.css('display', 'block');
+            },
+            'failure': function() {console.log('Unable to load source: ' + options.source);}
+        });
+        return;
+    }
+
+    let datastr = span.text();
+    span.empty();
+    new EmbedCollection(datastr, options).render(span);
+	span.css('display', 'block');
+}
