@@ -76,6 +76,23 @@ function molpress_shortcode_molecule($atts = [], $content = null, $tag = '')
     return $o;
 }
 
+function molpress_shortcode_reaction($atts = [], $content = null, $tag = '')
+{
+    global $watermark;
+    $watermark++;
+
+    $o = '';
+    $id = 'reaction' . $watermark;
+    $o .= '<span id="' . $id . '" style="display: none;">';
+ 
+    if (!is_null($content)) $o .= '<pre>' . $content . '</pre>';
+
+    $o .= '</span>';
+    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderReaction("' . $id . '",' . json_encode($atts) . ');});</script>';
+ 
+    return $o;
+}
+
 function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
 {
     global $watermark;
@@ -96,6 +113,7 @@ function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
 function molpress_shortcode_init()
 {
     add_shortcode('molecule', 'molpress_shortcode_molecule');
+    add_shortcode('reaction', 'molpress_shortcode_reaction');
     add_shortcode('collection', 'molpress_shortcode_collection');
 }
 
