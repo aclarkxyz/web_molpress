@@ -12,49 +12,10 @@ Version: 0.1
 Author URI: http://cheminf20.org
 */
 
-/*
-function spam_lyric() 
-{
-	$lyrics = "In the ning nang nong
-where the cows go bong.";
-
-	// Here we split it into lines
-	$lyrics = explode( "\n", $lyrics );
-
-	// And then randomly choose a line
-	return wptexturize( $lyrics[ mt_rand( 0, count( $lyrics ) - 1 ) ] );
-}
-
-// This just echoes the chosen line, we'll position it later
-function molpress() 
-{
-	$chosen = spam_lyric();
-	echo "<p id='molpress'>$chosen</p>";
-}
-
-// Now we set that function up to execute when the admin_notices action is called
-add_action( 'admin_notices', 'molpress' );
-*/
-
 // We need some CSS to position the paragraph
 function molpress_css() 
 {
-	## !! update this...
-
-	// This makes sure that the positioning is also good for right-to-left languages
-	$x = is_rtl() ? 'left' : 'right';
-
-	/*echo "
-	<style type='text/css'>
-	#dolly {
-		float: $x;
-		padding-$x: 15px;
-		padding-top: 5px;		
-		margin: 0;
-		font-size: 11px;
-	}
-	</style>
-	";*/
+	## todo
 }
 
 $watermark = 0;
@@ -127,7 +88,7 @@ function molpress_mime_types($mime_types)
     return $mime_types;
 }
 
-wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'webmolkit-build.js');
+wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'bin/webmolkit-build.js');
 wp_enqueue_script('webmolkit2', plugin_dir_url(__FILE__) . 'molpress.js');
 
 add_action( 'admin_head', 'molpress_css' );

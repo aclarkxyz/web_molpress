@@ -1,0 +1,16 @@
+{
+    "compilerOptions": 
+    {
+        "module": "system",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outFile": "bin/webmolkit-build.js",
+        "sourceMap": true,
+        "target": "ES6"
+    },
+    "include": 
+    [
+        "../WebMolKit/src/**/*.ts"
+    ]
+}
