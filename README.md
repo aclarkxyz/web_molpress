@@ -20,6 +20,6 @@ Installation is crude & effective: copy the directory into the WordPress hierarc
 
 	/path/to/web/wordpress/wp-content/plugins/
 
-Note that this has a dependency on WebMolKit (https://github.com/aclarkxyz/web_molkit); the output file must be copied into the same directory. This can alternatively be done with a link, e.g.
+## Compiling
 
-    ln /path/to/WebMolKit/bin/webmolkit-build.js .
+The deliverable is <code>bin/webmolkit-build.js</code>, which is compiled using _TypeScript_. One option is to use the version that is included in the GitHub repository. For compiling it, there must be a parallel directory (<code>../WebMolKit</code>) which is synced with the latest version from [GitHub](https://github.com/aclarkxyz/web_molkit).
