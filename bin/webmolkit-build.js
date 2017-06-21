@@ -19273,7 +19273,10 @@ class EmbedCollection extends EmbedChemistry {
             }
         }
         else {
-            ds = DataSheetStream.readXML(datastr);
+            try {
+                ds = DataSheetStream.readXML(datastr);
+            }
+            catch (ex) { }
             if (ds == null) {
                 try {
                     let mdl = new MDLSDFReader(datastr);
@@ -19604,6 +19607,7 @@ class EmbedReaction extends EmbedChemistry {
     constructor(datastr, options) {
         super();
         this.datastr = datastr;
+        this.row = 0;
         this.entry = null;
         this.failmsg = '';
         this.tight = false;
@@ -19640,7 +19644,13 @@ class EmbedReaction extends EmbedChemistry {
             this.failmsg = 'Experiment datasheet has no rows.';
             return;
         }
-        this.entry = xs.getEntry(0);
+        if (options.row)
+            this.row = options.row;
+        if (this.row < 0 || this.row >= xs.ds.numRows) {
+            this.failmsg = 'Requested row ' + this.row + ' out of bounds.';
+            return;
+        }
+        this.entry = xs.getEntry(this.row);
         if (options.facet)
             this.facet = options.facet;
         if (options.padding)
