@@ -12,12 +12,6 @@ Version: 0.1
 Author URI: http://cheminf20.org
 */
 
-// We need some CSS to position the paragraph
-function molpress_css() 
-{
-	## todo
-}
-
 $watermark = 0;
 
 function molpress_shortcode_molecule($atts = [], $content = null, $tag = '')
@@ -71,11 +65,29 @@ function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
     return $o;
 }
 
-function molpress_shortcode_init()
+function molpress_init()
 {
     add_shortcode('molecule', 'molpress_shortcode_molecule');
     add_shortcode('reaction', 'molpress_shortcode_reaction');
     add_shortcode('collection', 'molpress_shortcode_collection');
+
+    if ((current_user_can('edit_posts') || current_user_can('edit_pages')) /*&& get_user_option('rich_editing') == 'true'*/)
+    {
+        add_filter('mce_external_plugins', 'molpress_add_plugin');
+        add_filter('mce_buttons', 'molpress_register_button');
+    }
+}
+
+function molpress_add_plugin($plugin_array) 
+{
+    $plugin_array['molpress_button'] = plugin_dir_url(__FILE__) . '/molpress.js';
+    return $plugin_array;
+}
+
+function molpress_register_button($buttons ) 
+{
+    array_push($buttons, 'molpress_button');
+    return $buttons;
 }
 
 function molpress_mime_types($mime_types)
@@ -91,8 +103,10 @@ function molpress_mime_types($mime_types)
 wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'bin/webmolkit-build.js');
 wp_enqueue_script('webmolkit2', plugin_dir_url(__FILE__) . 'molpress.js');
 
-add_action( 'admin_head', 'molpress_css' );
-add_action( 'init', 'molpress_shortcode_init' );
+//add_action('admin_head', 'molpress_css');
+wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
+
+add_action('init', 'molpress_init');
 
 add_filter('upload_mimes', 'molpress_mime_types', 1, 1);
 

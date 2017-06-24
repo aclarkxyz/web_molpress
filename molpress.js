@@ -82,6 +82,7 @@ function molpress_RenderReaction(id, options)
     new EmbedReaction(datastr, options).render(span);
 	span.css('display', 'block');
 }
+
 // render a collection of molecular objects and miscellany, using the given parameters: see the EmbedCollection class for details
 function molpress_RenderCollection(id, options)
 {
@@ -112,3 +113,37 @@ function molpress_RenderCollection(id, options)
     new EmbedCollection(datastr, options).render(span);
 	span.css('display', 'block');
 }
+
+$ = jQuery;
+
+// add a button to the editor for inserting a molecule
+jQuery(document).ready(function($) 
+{
+    tinymce.create('tinymce.plugins.molpress_plugin', 
+    {
+        'init' : function(ed, url) 
+        {
+            RPC.RESOURCE_URL = url + '/res';
+            ed.addButton('molpress_button', 
+            {
+                'title' : 'Molecule',
+                'image' : url + '/img/edit.svg',
+                'onclick' : function() 
+                {
+                    // (try to fetch selected molecule, if any)
+                    let dlg = new EditCompound(new Molecule());
+                    dlg.onSave(function()
+                    {
+                        let molstr = dlg.getMolecule().toString();
+                        let prehtml = molstr.trim().split('\n').join('<br>');
+                        ed.execCommand('mceInsertContent', false, '<br>[molecule]' + prehtml + '[/molecule]<br>');
+                        dlg.close();
+                    });
+                    dlg.open();
+                }
+            });
+        },  
+    });
+
+    tinymce.PluginManager.add('molpress_button', tinymce.plugins.molpress_plugin);
+});

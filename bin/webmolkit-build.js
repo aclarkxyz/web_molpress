@@ -41,6 +41,15 @@ class Vec {
         arr[idx1] = arr[idx2];
         arr[idx2] = v;
     }
+    static concat(arr1, arr2) {
+        if (arr1 == null && arr2 == null)
+            return [];
+        if (arr1 == null)
+            return arr2.slice(0);
+        if (arr2 == null)
+            return arr1.slice();
+        return arr1.concat(arr2);
+    }
     static equals(arr1, arr2) {
         if (arr1 == null && arr2 == null)
             return true;
@@ -277,6 +286,36 @@ class Vec {
         arr = arr.slice(0);
         this.sort(arr);
         return arr;
+    }
+    static uniqueUnstable(arr) {
+        return Array.from(new Set(arr));
+    }
+    static uniqueStable(arr) {
+        let set = new Set(arr), ret = [];
+        for (let v in arr)
+            if (set.has(v)) {
+                ret.push(v);
+                set.delete(v);
+            }
+        return ret;
+    }
+    static maskUnique(arr) {
+        let set = new Set(arr), ret = this.booleanArray(false, arr.length);
+        for (let n = 0; n < arr.length; n++)
+            if (set.has(arr[n])) {
+                ret[n] = true;
+                set.delete(arr[n]);
+            }
+        return ret;
+    }
+    static idxUnique(arr) {
+        let set = new Set(arr), ret = [];
+        for (let n = 0; n < arr.length; n++)
+            if (set.has(arr[n])) {
+                ret.push(n);
+                set.delete(arr[n]);
+            }
+        return ret;
     }
 }
 class Permutation {
@@ -526,6 +565,7 @@ function sqr(v) {
     return v * v;
 }
 function invZ(v) { return v == 0 ? 0 : 1.0 / v; }
+function fltEqual(v1, v2) { return v1 == v2 || Math.abs(v1 - v2) <= 1E-7 * Math.max(v1, v2); }
 function realEqual(v1, v2) { return v1 == v2 || Math.abs(v1 - v2) <= 1E-14 * Math.max(v1, v2); }
 const TWOPI = 2 * Math.PI;
 const INV_TWOPI = 1.0 / TWOPI;
@@ -1038,6 +1078,22 @@ class DataSheet {
             if (this.data.colData[n].type == type)
                 return n;
         return -1;
+    }
+    toString(row, col) {
+        let obj = this.data.rowData[row][col];
+        return obj == null ? null : obj.toString();
+    }
+    toInt(row, col) {
+        if (!this.colIsPrimitive(col))
+            return null;
+        let obj = this.data.rowData[row][col];
+        return obj == null ? null : parseInt(obj);
+    }
+    toReal(row, col) {
+        if (!this.colIsPrimitive(col))
+            return null;
+        let obj = this.data.rowData[row][col];
+        return obj == null ? null : parseFloat(obj);
     }
 }
 DataSheet.COLTYPE_MOLECULE = 'molecule';
@@ -5924,6 +5980,7 @@ class MDLSDFReader {
     parseStream() {
         let ds = this.ds;
         ds.appendColumn('Molecule', DataSheet.COLTYPE_MOLECULE, 'Molecular structure');
+        let colName = -1;
         let entry = [];
         while (this.pos < this.lines.length) {
             let line = this.lines[this.pos++];
@@ -5943,18 +6000,24 @@ class MDLSDFReader {
                 if (line.startsWith('M	END'))
                     break;
             }
-            let mol = null;
+            let mol = null, name = null;
             try {
                 if (molstr.length > 0) {
                     let mdl = new MDLMOLReader(molstr);
                     mdl.parse();
                     mol = mdl.mol;
+                    name = mdl.molName;
                 }
             }
             catch (ex) {
             }
             if (mol != null)
                 ds.setMolecule(rn, 0, mol);
+            if (name) {
+                if (colName < 0)
+                    colName = ds.appendColumn('Name', DataSheet.COLTYPE_STRING, 'Molecule name');
+                ds.setString(rn, colName, name);
+            }
             if (rn == 0 && mol != null) {
                 let str1 = entry[0], str3 = entry[2];
                 if (str1.length >= 7 && str1.startsWith("$name=")) {
@@ -10067,7 +10130,8 @@ class Dialog {
         this.callbackClose = callback;
     }
     open() {
-        let bg = $('<div></div>').appendTo(document.body);
+        let body = $(document.documentElement);
+        let bg = $('<div></div>').appendTo(body);
         bg.css('width', '100%');
         bg.css('height', document.documentElement.clientHeight + 'px');
         bg.css('background-color', 'black');
@@ -10075,8 +10139,9 @@ class Dialog {
         bg.css('position', 'absolute');
         bg.css('left', 0);
         bg.css('top', 0);
+        bg.css('z-index', 999);
         this.obscureBackground = bg;
-        let pb = $('<div></div>').appendTo(document.body);
+        let pb = $('<div></div>').appendTo(body);
         pb.css('min-width', this.minPortionWidth + '%');
         if (this.maxPortionWidth != null)
             pb.css('max-width', this.maxPortionWidth + '%');
@@ -10087,6 +10152,7 @@ class Dialog {
         pb.css('left', (50 - 0.5 * this.minPortionWidth) + '%');
         pb.css('top', (document.body.scrollTop + 50) + 'px');
         pb.css('min-height', '50%');
+        pb.css('z-index', 1000);
         this.panelBoundary = pb;
         let tdiv = $('<div></div>').appendTo(pb);
         tdiv.css('width', '100%');
@@ -10097,15 +10163,19 @@ class Dialog {
         tdiv.css('margin', 0);
         tdiv.css('padding', 0);
         this.titleDiv = tdiv;
-        let bdiv = $('<div"></div>').appendTo(pb);
+        let bdiv = $('<div></div>').appendTo(pb);
         bdiv.css('width', '100%');
         this.bodyDiv = $('<div style="padding: 0.5em;"></div>').appendTo(bdiv);
         let ttlTable = $('<table></table>').appendTo(tdiv), tr = $('<tr></tr>').appendTo(ttlTable);
         ttlTable.attr('width', '100%');
-        ttlTable.css('padding', '0.5em');
         let tdTitle = $('<td valign="center"></td>').appendTo(tr);
-        tdTitle.append('<b><big>' + escapeHTML(this.title) + '</big></b>');
+        tdTitle.css('padding', '0.5em');
+        let ttl = $('<font></font>').appendTo(tdTitle);
+        ttl.css('font-size', '1.5em');
+        ttl.css('font-weight', '600');
+        ttl.text(this.title);
         let tdButtons = $('<td align="right" valign="center"></td>').appendTo(tr);
+        tdButtons.css('padding', '0.5em');
         this.btnClose = $('<button class="button button-default">Close</button>').appendTo(tdButtons);
         this.btnClose.click(() => this.close());
         this.titleButtons = tdButtons;
@@ -17955,9 +18025,8 @@ class Sketcher extends Widget {
 }
 Sketcher.UNDO_SIZE = 20;
 class EditCompound extends Dialog {
-    constructor(tokenID, mol) {
+    constructor(mol) {
         super();
-        this.tokenID = tokenID;
         this.mol = mol;
         this.fakeTextArea = null;
         this.callbackSave = null;
@@ -17982,7 +18051,7 @@ class EditCompound extends Dialog {
         this.btnSave = $('<button class="button button-primary">Save</button>').appendTo(buttons);
         this.btnSave.click(() => { if (this.callbackSave)
             this.callbackSave(this); });
-        let skw = 800, skh = 700;
+        let skw = 800, skh = 650;
         let skdiv = $('<div></div>').appendTo(this.body());
         skdiv.css('width', skw + 'px');
         skdiv.css('height', skh + 'px');
@@ -18866,6 +18935,77 @@ ArrangeExperiment.COMP_ANNOT_WASTE = 2;
 ArrangeExperiment.COMP_ANNOT_IMPLIED = 3;
 ArrangeExperiment.COMP_GAP_LEFT = 0.5;
 ArrangeExperiment.COMP_ANNOT_SIZE = 1;
+class AxisLabeller {
+    constructor(width, minVal, maxVal, textWidth, inverse) {
+        this.width = width;
+        this.minVal = minVal;
+        this.maxVal = maxVal;
+        this.textWidth = textWidth;
+        this.inverse = inverse;
+        this.notches = [];
+    }
+    calculate() {
+        if (this.minVal == this.maxVal) {
+            this.notches.push({
+                'label': this.minVal.toString(),
+                'value': this.minVal,
+                'pos': 0.5 * this.width
+            });
+            return;
+        }
+        const width = this.width, minVal = this.minVal, maxVal = this.maxVal;
+        const range = maxVal - minVal, invRange = 1.0 / range;
+        let position = (val) => width * (val - minVal) * invRange;
+        let loT = null, hiT = null;
+        const bumpLess = 1 - 1E-5, bumpMore = 1 + 1E-5;
+        got: for (let outer = 1E-10; outer <= 1E11; outer *= 10)
+            for (let inner of [0.2, 0.5, 1]) {
+                let mag = outer * inner, inv = 1.0 / mag;
+                let t1 = Math.floor(minVal * mag * bumpLess) * inv, t2 = Math.round(minVal * mag) * inv, t3 = Math.ceil(minVal * mag * bumpMore) * inv;
+                let t4 = Math.floor(maxVal * mag * bumpLess) * inv, t5 = Math.round(maxVal * mag) * inv, t6 = Math.ceil(maxVal * mag * bumpMore) * inv;
+                let p1 = position(t1), p2 = position(t2), p3 = position(t3);
+                let p4 = position(t4), p5 = position(t5), p6 = position(t6);
+                if ((fltEqual(p1, 0) || p1 >= 0) && p1 <= 0.1 * width)
+                    loT = t1;
+                else if ((fltEqual(p2, 0) || p2 >= 0) && p2 <= 0.1 * width)
+                    loT = t2;
+                else if ((fltEqual(p3, 0) || p3 >= 0) && p3 <= 0.1 * width)
+                    loT = t3;
+                else
+                    continue;
+                if (p6 >= 0.9 * width && (fltEqual(p6, width) || p6 <= width))
+                    hiT = t6;
+                else if (p5 >= 0.9 * width && (fltEqual(p5, width) || p5 <= width))
+                    hiT = t5;
+                else if (p4 >= 0.9 * width && (fltEqual(p4, width) || p4 <= width))
+                    hiT = t4;
+                else
+                    continue;
+                break got;
+            }
+        if (loT == null || hiT == null)
+            return;
+        let loVal = this.inverse(loT), hiVal = this.inverse(hiT);
+        this.notches.push({
+            'label': this.formatNumber(loVal),
+            'value': loVal,
+            'pos': position(loT)
+        });
+        this.notches.push({
+            'label': this.formatNumber(hiVal),
+            'value': hiVal,
+            'pos': position(hiT)
+        });
+    }
+    formatNumber(num) {
+        let str = num.toPrecision(4);
+        str = str.replace(/^(-?\d+)\.0+$/, '$1');
+        str = str.replace(/^(-?\d+\.0*[1-9]+)0+$/, '$1');
+        str = str.replace(/^(-?\d+)\.0+(e[\+\-]\d+)$/, '$1$2');
+        str = str.replace(/^(-?\d+\.0*[1-9]+)0+(e[\+\-]\d+)$/, '$1$2');
+        return str;
+    }
+}
 class DrawExperiment {
     constructor(layout, vg) {
         this.layout = layout;
@@ -20130,6 +20270,8 @@ class Honeycomb extends Widget {
         this.mouseFirst = null;
         this.mouseLast = null;
         this.panDelta = [0, 0];
+        this.hoverHex = -1;
+        this.hoverSpan = null;
         let scale = 12;
         this.policyColour = RenderPolicy.defaultColourOnWhite();
         this.policyColour.data.pointScale = scale;
@@ -20137,11 +20279,11 @@ class Honeycomb extends Widget {
         this.policyWhite.data.pointScale = scale;
         this.effects = new RenderEffects();
     }
-    addReferenceMolecule(mol) {
-        this.molecules.push({ 'mol': mol, 'isReference': true, 'rimColour': null });
+    addReferenceMolecule(mol, name) {
+        this.molecules.push({ 'mol': mol, 'name': name, 'isReference': true, 'rimColour': null });
     }
-    addModelMolecule(mol, rimColour) {
-        this.molecules.push({ 'mol': mol, 'isReference': false, 'rimColour': rimColour });
+    addModelMolecule(mol, name, rimColour) {
+        this.molecules.push({ 'mol': mol, 'name': name, 'isReference': false, 'rimColour': rimColour });
     }
     render(parent) {
         super.render(parent);
@@ -20164,6 +20306,7 @@ class Honeycomb extends Widget {
         this.container.keyup((event) => this.keyUp(event));
     }
     populate() {
+        this.changeHover(-1);
         this.container.empty();
         for (let hmol of this.molecules)
             if (!hmol.fp) {
@@ -20193,6 +20336,7 @@ class Honeycomb extends Widget {
                 hex.withRim = true;
                 hex.rimCols = Vec.numberArray(hmol.rimColour, 6);
             }
+            hex.annotation = hmol.name;
             this.hexes.push(hex);
         }
         this.growFlower();
@@ -20211,6 +20355,7 @@ class Honeycomb extends Widget {
                 return;
             this.zoomFactor *= 3 / 2;
         }
+        this.changeHover(-1);
         this.renderHexes();
     }
     growFlower() {
@@ -20408,6 +20553,20 @@ class Honeycomb extends Widget {
             }
         }
         let bumpDown = 0;
+        if (hex.annotation) {
+            let txt = hex.annotation, maxW = 0.5 * hex.hexSize;
+            let wad = this.measure.measureText(txt, hex.annotFontSize);
+            if (wad[0] > maxW) {
+                while (txt.length > 0 && wad[0] > maxW) {
+                    txt = txt.substring(0, txt.length - 1);
+                    wad = this.measure.measureText(txt + '..', hex.annotFontSize);
+                }
+                txt += '..';
+            }
+            let y = centre.y - hex.innerRad * mainFract;
+            gfx.drawText(centre.x, y + 2, txt, hex.annotFontSize, hex.annotCol, TextAlign.Centre | TextAlign.Top);
+            bumpDown = wad[1] + wad[2];
+        }
         let rad = hex.innerRad * mainFract - 1 - bumpDown;
         let policy = hex.policy ? hex.policy : this.policyColour;
         let layout = new ArrangeMolecule(hex.mol, this.measure, policy, this.effects);
@@ -20501,6 +20660,7 @@ class Honeycomb extends Widget {
         this.container.focus();
     }
     mouseDoubleClick(event) {
+        this.changeHover(-1);
         let xy = eventCoords(event, this.container);
         let idx = this.pickHex(xy[0], xy[1]);
         if (idx >= 0 && idx != this.seed) {
@@ -20532,6 +20692,10 @@ class Honeycomb extends Widget {
                 this.mouseLast = xy;
             }
         }
+        else {
+            let xy = eventCoords(event, this.container);
+            this.changeHover(this.pickHex(xy[0], xy[1]));
+        }
     }
     keyPressed(event) {
     }
@@ -20546,6 +20710,7 @@ class Honeycomb extends Widget {
                 hex.span.css('left', (hex.frame.x + this.panDelta[0]) + 'px');
                 hex.span.css('top', (hex.frame.y + this.panDelta[1]) + 'px');
             }
+        this.changeHover(-1);
     }
     pickHex(x, y) {
         let closest = -1, closestDSQ = 0;
@@ -20560,6 +20725,70 @@ class Honeycomb extends Widget {
             }
         }
         return closest;
+    }
+    changeHover(hover) {
+        if (hover >= 0 && this.hexes[hover].span == null)
+            hover = -1;
+        if (this.hoverHex == hover)
+            return;
+        this.hoverHex = hover;
+        if (hover < 0) {
+            if (this.hoverSpan)
+                this.hoverSpan.remove();
+            this.hoverSpan = null;
+            return;
+        }
+        if (this.hoverSpan == null) {
+            this.hoverSpan = $('<span></span>').appendTo(this.container);
+            this.hoverSpan.css('position', 'absolute');
+            this.hoverSpan.css('pointer-events', 'none');
+            this.hoverSpan.css('zIndex', 1);
+        }
+        else
+            this.hoverSpan.empty();
+        let hex = this.hexes[hover];
+        let urad = 0.5 * this.hexSize * this.zoomFactor, udiam = Math.ceil(2 * urad), uspan = 2 * udiam;
+        let x0 = Math.floor(hex.centre.x - udiam), y0 = Math.floor(hex.centre.y - udiam);
+        this.hoverSpan.css('left', (hex.frame.x + this.panDelta[0] + x0) + 'px');
+        this.hoverSpan.css('top', (hex.frame.y + this.panDelta[1] + y0) + 'px');
+        this.hoverSpan.css('width', uspan + 'px');
+        this.hoverSpan.css('height', uspan + 'px');
+        let gfx = new MetaVector();
+        const DEG30 = Math.PI / 6;
+        let ext = urad * (1 - sqr(Math.sin(DEG30))) / Math.cos(DEG30);
+        let xNE = this.offsetX(hex.x, hex.y, this.HEX_NE), yNE = this.offsetY(hex.x, hex.y, this.HEX_NE);
+        let xSE = this.offsetX(hex.x, hex.y, this.HEX_SE), ySE = this.offsetY(hex.x, hex.y, this.HEX_SE);
+        let xS = this.offsetX(hex.x, hex.y, this.HEX_S), yS = this.offsetY(hex.x, hex.y, this.HEX_S);
+        let xSW = this.offsetX(hex.x, hex.y, this.HEX_SW), ySW = this.offsetY(hex.x, hex.y, this.HEX_SW);
+        let xNW = this.offsetX(hex.x, hex.y, this.HEX_NW), yNW = this.offsetY(hex.x, hex.y, this.HEX_NW);
+        let xN = this.offsetX(hex.x, hex.y, this.HEX_N), yN = this.offsetY(hex.x, hex.y, this.HEX_N);
+        let adjHexes = [null, null, null, null, null, null];
+        for (let adj of this.hexes) {
+            if (adj.x == xNE && adj.y == yNE)
+                adjHexes[0] = adj;
+            else if (adj.x == xSE && adj.y == ySE)
+                adjHexes[1] = adj;
+            else if (adj.x == xS && adj.y == yS)
+                adjHexes[2] = adj;
+            else if (adj.x == xSW && adj.y == ySW)
+                adjHexes[3] = adj;
+            else if (adj.x == xNW && adj.y == yNW)
+                adjHexes[4] = adj;
+            else if (adj.x == xN && adj.y == yN)
+                adjHexes[5] = adj;
+        }
+        for (let n = 0; n < 6; n++)
+            if (adjHexes[n]) {
+                let th = (n - 0.5) * Math.PI * 1.0 / 3;
+                let lx = hex.centre.x - x0 + ext * Math.cos(th);
+                let ly = hex.centre.y - y0 + ext * Math.sin(th);
+                let sim = CircularFingerprints.tanimoto(hex.fp, adjHexes[n].fp);
+                let txt = sim.toFixed(3), wad = this.measure.measureText(txt, hex.annotFontSize);
+                gfx.drawRect(lx - wad[0] * 0.5 - 2, ly - wad[1] * 0.5 - 2, wad[0] + 4, wad[1] + 4, 0x000000, 1, 0xD0D0D0);
+                gfx.drawText(lx, ly + 0.5 * wad[1], txt, hex.annotFontSize, 0x000000, TextAlign.Centre);
+            }
+        gfx.setSize(uspan, uspan);
+        $(gfx.createSVG()).appendTo(this.hoverSpan);
     }
 }
 class RowView extends Widget {
@@ -21143,7 +21372,7 @@ class SearchPanel extends Widget {
         }
     }
     editMolecule(which) {
-        let dlg = new EditCompound(null, which == 1 ? this.mol1 : this.mol2);
+        let dlg = new EditCompound(which == 1 ? this.mol1 : this.mol2);
         this.isSketching = true;
         dlg.onSave(() => { if (which == 1)
             this.saveMolecule1(dlg);
