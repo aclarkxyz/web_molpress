@@ -1080,6 +1080,8 @@ class DataSheet {
         return -1;
     }
     toString(row, col) {
+        if (typeof col === 'string')
+            col = this.findColByName(col);
         let obj = this.data.rowData[row][col];
         return obj == null ? null : obj.toString();
     }
@@ -7662,23 +7664,23 @@ class BayesianSource extends Aspect {
             let eq = line.indexOf('=');
             if (eq < 0)
                 continue;
-            if (line.startsWith("colNameMolecule="))
+            if (line.startsWith('colNameMolecule='))
                 m.colNameMolecule = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("colNameValue="))
+            else if (line.startsWith('colNameValue='))
                 m.colNameValue = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("thresholdValue="))
+            else if (line.startsWith('thresholdValue='))
                 m.thresholdValue = parseFloat(line.substring(eq + 1));
-            else if (line.startsWith("thresholdRelation="))
+            else if (line.startsWith('thresholdRelation='))
                 m.thresholdRelation = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("folding="))
+            else if (line.startsWith('folding='))
                 m.folding = parseInt(line.substring(eq + 1));
-            else if (line.startsWith("noteField="))
+            else if (line.startsWith('noteField='))
                 m.noteField = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("noteTitle="))
+            else if (line.startsWith('noteTitle='))
                 m.noteTitle = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("noteOrigin="))
+            else if (line.startsWith('noteOrigin='))
                 m.noteOrigin = MoleculeStream.sk_unescape(line.substring(eq + 1));
-            else if (line.startsWith("noteComment="))
+            else if (line.startsWith('noteComment='))
                 m.noteComment = MoleculeStream.sk_unescape(line.substring(eq + 1));
         }
         if (m != null)
@@ -7705,7 +7707,7 @@ class BayesianSource extends Aspect {
                 this.ds.setExtData(n, content.toString());
                 return;
             }
-        this.ds.appendExtension("BayesianSource", BayesianSource.CODE, content.toString());
+        this.ds.appendExtension('BayesianSource', BayesianSource.CODE, content.toString());
     }
     setup() {
         if (this.allowModify) {
@@ -7717,6 +7719,131 @@ class BayesianSource extends Aspect {
 }
 BayesianSource.CODE = 'org.mmi.aspect.BayesianSource';
 BayesianSource.NAME = 'Bayesian Source';
+class BayesianPredictionModel {
+}
+class BayesianPredictionOutcome {
+}
+class BayesianPrediction extends Aspect {
+    constructor(ds, allowModify) {
+        super(ds, allowModify);
+        this.setup();
+    }
+    static isBayesianPrediction(ds) {
+        for (let n = 0; n < ds.numExtensions; n++)
+            if (ds.getExtType(n) == BayesianPrediction.CODE)
+                return true;
+        return false;
+    }
+    getModels() {
+        let content = '';
+        for (let n = 0; n < this.ds.numExtensions; n++)
+            if (this.ds.getExtType(n) == BayesianPrediction.CODE) {
+                content = this.ds.getExtData(n);
+                break;
+            }
+        let models = [];
+        let m = null;
+        for (let line of content.split('\n')) {
+            if (line == 'model:') {
+                if (m != null)
+                    models.push(m);
+                m = {};
+                continue;
+            }
+            if (m == null)
+                continue;
+            let eq = line.indexOf('=');
+            if (eq < 0)
+                continue;
+            if (line.startsWith('colMolecule='))
+                m.colMolecule = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('colRaw='))
+                m.colRaw = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('colScaled='))
+                m.colScaled = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('colArcTan='))
+                m.colArcTan = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('colDomain='))
+                m.colDomain = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('colAtoms='))
+                m.colAtoms = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('name='))
+                m.name = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('description='))
+                m.description = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('targetName='))
+                m.targetName = MoleculeStream.sk_unescape(line.substring(eq + 1));
+            else if (line.startsWith('isOffTarget='))
+                m.isOffTarget = line.substring(eq + 1) == 'true';
+        }
+        if (m != null)
+            models.push(m);
+        return models;
+    }
+    setModels(models) {
+        let lines = [];
+        for (let m of models) {
+            lines.push('model:');
+            lines.push('colMolecule=' + MoleculeStream.sk_escape(m.colMolecule));
+            lines.push('colRaw=' + MoleculeStream.sk_escape(m.colRaw));
+            lines.push('colScaled=' + MoleculeStream.sk_escape(m.colScaled));
+            lines.push('colArcTan=' + MoleculeStream.sk_escape(m.colArcTan));
+            lines.push('colDomain=' + MoleculeStream.sk_escape(m.colDomain));
+            lines.push('colAtoms=' + MoleculeStream.sk_escape(m.colAtoms));
+            lines.push('name=' + MoleculeStream.sk_escape(m.name));
+            lines.push('description=' + MoleculeStream.sk_escape(m.description));
+            lines.push('targetName=' + MoleculeStream.sk_escape(m.targetName));
+            lines.push('isOffTarget=' + m.isOffTarget);
+        }
+        let content = lines.join('\n');
+        for (let n = 0; n < this.ds.numExtensions; n++)
+            if (this.ds.getExtType(n) == BayesianSource.CODE) {
+                this.ds.setExtData(n, content.toString());
+                return;
+            }
+        this.ds.appendExtension('BayesianPrediction', BayesianPrediction.CODE, content.toString());
+    }
+    getOutcome(row, model) {
+        let outcome = new BayesianPredictionOutcome();
+        outcome.raw = this.ds.getReal(row, model.colRaw);
+        outcome.scaled = this.ds.getReal(row, model.colScaled);
+        outcome.arctan = this.ds.getReal(row, model.colArcTan);
+        outcome.domain = this.ds.getReal(row, model.colDomain);
+        let strAtoms = this.ds.getString(row, model.colAtoms);
+        if (strAtoms) {
+            outcome.atoms = [];
+            for (let b of strAtoms.split(','))
+                outcome.atoms.push(parseFloat(b));
+        }
+        return outcome;
+    }
+    setOutcome(row, model, outcome) {
+        let col = this.ds.findColByName(model.colRaw, DataSheet.COLTYPE_REAL);
+        if (col >= 0)
+            this.ds.setReal(row, col, outcome.raw);
+        col = this.ds.findColByName(model.colScaled, DataSheet.COLTYPE_REAL);
+        if (col >= 0)
+            this.ds.setReal(row, col, outcome.scaled);
+        col = this.ds.findColByName(model.colArcTan, DataSheet.COLTYPE_REAL);
+        if (col >= 0)
+            this.ds.setReal(row, col, outcome.arctan);
+        col = this.ds.findColByName(model.colDomain, DataSheet.COLTYPE_REAL);
+        if (col >= 0)
+            this.ds.setReal(row, col, outcome.domain);
+        col = this.ds.findColByName(model.colAtoms, DataSheet.COLTYPE_STRING);
+        if (col >= 0)
+            this.ds.setString(row, col, outcome.atoms ? outcome.atoms.toString() : null);
+    }
+    setup() {
+        if (this.allowModify) {
+            let models = this.getModels();
+            this.setModels(models);
+        }
+    }
+    plainHeading() { return BayesianSource.NAME; }
+}
+BayesianPrediction.CODE = 'org.mmi.aspect.BayesianPrediction';
+BayesianPrediction.NAME = 'Bayesian Prediction';
 let SUPPORTED_ASPECTS = {};
 class AspectList {
     constructor(ds) {
@@ -7726,6 +7853,7 @@ class AspectList {
             SUPPORTED_ASPECTS[Experiment.CODE] = Experiment.NAME;
             SUPPORTED_ASPECTS[AssayProvenance.CODE] = AssayProvenance.NAME;
             SUPPORTED_ASPECTS[BayesianSource.CODE] = BayesianSource.NAME;
+            SUPPORTED_ASPECTS[BayesianPrediction.CODE] = BayesianPrediction.NAME;
         }
     }
     list() {
@@ -10212,9 +10340,10 @@ function addTooltip(parent, bodyHTML, titleHTML, delay) {
         globalPopover = $(document.createElement('div'));
         globalPopover.css('position', 'absolute');
         globalPopover.css('background-color', '#F0F0FF');
+        globalPopover.css('background-image', 'linear-gradient(to right bottom, #FFFFFF, #D0D0FF)');
         globalPopover.css('color', 'black');
         globalPopover.css('border', '1px solid black');
-        globalPopover.css('padding', '0.3em');
+        globalPopover.css('border-radius', '4px');
         globalPopover.hide();
         globalPopover.appendTo(document.body);
     }
@@ -10256,20 +10385,38 @@ class Tooltip {
         let pop = globalPopover;
         pop.css('max-width', '20em');
         pop.empty();
+        let div = $('<div></div>').appendTo(pop);
+        div.css('padding', '0.3em');
         let hasTitle = this.titleHTML != null && this.titleHTML.length > 0, hasBody = this.bodyHTML != null && this.bodyHTML.length > 0;
         if (hasTitle)
-            ($('<div></div>').appendTo(pop)).html('<b>' + this.titleHTML + '</b>');
+            ($('<div></div>').appendTo(div)).html('<b>' + this.titleHTML + '</b>');
         if (hasTitle && hasBody)
-            pop.append('<hr>');
+            div.append('<hr>');
         if (hasBody)
-            ($('<div></div>').appendTo(pop)).html(this.bodyHTML);
-        let popW = pop.width(), popH = pop.height();
-        let wpos = this.widget.offset(), width = this.widget.width(), height = this.widget.height();
-        let posX = wpos.left;
-        let posY = wpos.top + height + 2;
-        pop.css('left', `${posX}px`);
-        pop.css('top', `${posY}px`);
+            ($('<div></div>').appendTo(div)).html(this.bodyHTML);
+        let winW = $(window).width(), winH = $(window).height();
+        const GAP = 2;
+        let wx1 = this.widget.offset().left, wy1 = this.widget.offset().top;
+        let wx2 = wx1 + this.widget.width(), wy2 = wy1 + this.widget.height();
+        let setPosition = () => {
+            let popW = pop.width(), popH = pop.height();
+            let posX = 0, posY = 0;
+            if (wx1 + popW < winW)
+                posX = wx1;
+            else if (popW < wx2)
+                posX = wx2 - popW;
+            if (wy2 + GAP + popH < winH)
+                posY = wy2 + GAP;
+            else if (wy1 - GAP - popH > 0)
+                posY = wy1 - GAP - popH;
+            else
+                posY = wy2 + GAP;
+            pop.css('left', `${posX}px`);
+            pop.css('top', `${posY}px`);
+        };
+        setPosition();
         pop.show();
+        window.setTimeout(setPosition(), 1);
     }
     lower() {
         let pop = globalPopover;
@@ -16656,7 +16803,7 @@ class Sketcher extends Widget {
         }
         this.container.click((event) => this.mouseClick(event));
         this.container.dblclick((event) => this.mouseDoubleClick(event));
-        this.container.mousedown((event) => { event.preventDefault(); this.mouseDown(event); });
+        this.container.mousedown((event) => this.mouseDown(event));
         this.container.mouseup((event) => this.mouseUp(event));
         this.container.mouseover((event) => this.mouseOver(event));
         this.container.mouseout((event) => this.mouseOut(event));
@@ -17574,6 +17721,7 @@ class Sketcher extends Widget {
         event.stopImmediatePropagation();
     }
     mouseDown(event) {
+        event.preventDefault();
         this.clearMessage();
         this.dragType = DraggingTool.Press;
         this.opBudged = false;

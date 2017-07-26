@@ -67,6 +67,11 @@ function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
 
 function molpress_init()
 {
+    wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'bin/webmolkit-build.js');
+    wp_enqueue_script('webmolkit2', plugin_dir_url(__FILE__) . 'molpress.js');
+
+    wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
+
     add_shortcode('molecule', 'molpress_shortcode_molecule');
     add_shortcode('reaction', 'molpress_shortcode_reaction');
     add_shortcode('collection', 'molpress_shortcode_collection');
@@ -99,12 +104,6 @@ function molpress_mime_types($mime_types)
     $mime_types['sdf'] = 'chemical/x-mdl-sdfile'; 
     return $mime_types;
 }
-
-wp_enqueue_script('webmolkit1', plugin_dir_url(__FILE__) . 'bin/webmolkit-build.js');
-wp_enqueue_script('webmolkit2', plugin_dir_url(__FILE__) . 'molpress.js');
-
-//add_action('admin_head', 'molpress_css');
-wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
 
 add_action('init', 'molpress_init');
 
