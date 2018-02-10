@@ -85,13 +85,14 @@ function molpress_init()
 
 function molpress_add_plugin($plugin_array) 
 {
-    $plugin_array['molpress_button'] = plugin_dir_url(__FILE__) . '/molpress.js';
+    $plugin_array['molpress_plugin'] = plugin_dir_url(__FILE__) . '/molpress.js';
     return $plugin_array;
 }
 
 function molpress_register_button($buttons ) 
 {
-    array_push($buttons, 'molpress_button');
+    array_push($buttons, 'molpress_molecule_button');
+    array_push($buttons, 'molpress_reaction_button');
     return $buttons;
 }
 

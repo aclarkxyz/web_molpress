@@ -124,10 +124,10 @@ jQuery(document).ready(function($)
         'init' : function(ed, url) 
         {
             RPC.RESOURCE_URL = url + '/res';
-            ed.addButton('molpress_button', 
+            ed.addButton('molpress_molecule_button', 
             {
                 'title' : 'Molecule',
-                'image' : url + '/img/edit.svg',
+                'image' : url + '/img/molecule.svg',
                 'onclick' : function() 
                 {
                     // (try to fetch selected molecule, if any)
@@ -142,8 +142,18 @@ jQuery(document).ready(function($)
                     dlg.open();
                 }
             });
+            ed.addButton('molpress_reaction_button', 
+            {
+                'title' : 'Reaction',
+                'image' : url + '/img/reaction.svg',
+                'onclick' : function() 
+                {
+                    // (try to fetch selected molecule, if any)
+                    alert('Fnord');
+                }
+            });
         },  
     });
 
-    tinymce.PluginManager.add('molpress_button', tinymce.plugins.molpress_plugin);
+    tinymce.PluginManager.add('molpress_plugin', tinymce.plugins.molpress_plugin);
 });
