@@ -724,6 +724,66 @@ function escapeHTML(text) {
     return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 function orBlank(str) { return str == null ? '' : str; }
+function toUTF8(str) {
+    let data = [], stripe = '';
+    const sz = str.length;
+    for (let n = 0; n < sz; n++) {
+        var charcode = str.charCodeAt(n);
+        if (charcode < 0x80)
+            stripe += str.charAt(n);
+        else if (charcode < 0x800) {
+            stripe += String.fromCharCode(0xc0 | (charcode >> 6));
+            stripe += String.fromCharCode(0x80 | (charcode & 0x3F));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+            stripe += String.fromCharCode(0xe0 | (charcode >> 12));
+            stripe += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3F));
+            stripe += String.fromCharCode(0x80 | (charcode & 0x3F));
+        }
+        else {
+            n++;
+            charcode = 0x10000 + (((charcode & 0x3FF) << 10) | (str.charCodeAt(n) & 0x3FF));
+            stripe += String.fromCharCode(0xf0 | (charcode >> 18));
+            stripe += String.fromCharCode(0x80 | ((charcode >> 12) & 0x3F));
+            stripe += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3F));
+            stripe += String.fromCharCode(0x80 | (charcode & 0x3F));
+        }
+        if (stripe.length > 100) {
+            data.push(stripe);
+            stripe = '';
+        }
+    }
+    data.push(stripe);
+    return data.join('');
+}
+function fromUTF8(str) {
+    let data = [], stripe = '';
+    const sz = str.length;
+    for (let n = 0; n < sz; n++) {
+        let value = str.charCodeAt(n);
+        if (value < 0x80)
+            stripe += str.charAt(n);
+        else if (value > 0xBF && value < 0xE0) {
+            stripe += String.fromCharCode((value & 0x1F) << 6 | str.charCodeAt(n + 1) & 0x3F);
+            n++;
+        }
+        else if (value > 0xDF && value < 0xF0) {
+            str += String.fromCharCode((value & 0x0F) << 12 | (str.charCodeAt(n + 1) & 0x3F) << 6 | str.charCodeAt(n + 2) & 0x3F);
+            n += 2;
+        }
+        else {
+            let charCode = ((value & 0x07) << 18 | (str.charCodeAt(n + 1) & 0x3F) << 12 | (str.charCodeAt(n + 2) & 0x3F) << 6 | str.charCodeAt(n + 3) & 0x3F) - 0x010000;
+            stripe += String.fromCharCode(charCode >> 10 | 0xD800, charCode & 0x03FF | 0xDC00);
+            n += 3;
+        }
+        if (stripe.length > 100) {
+            data.push(stripe);
+            stripe = '';
+        }
+    }
+    data.push(stripe);
+    return data.join('');
+}
 class DataSheet {
     constructor(data) {
         if (!data)
@@ -10019,6 +10079,8 @@ class EmbedReaction extends EmbedChemistry {
         this.includeAnnot = false;
         if (!options)
             options = {};
+        if (options.encoding == 'base64')
+            datastr = fromUTF8(atob(datastr));
         let xs = null;
         if (options.format == 'datasheet' || options.format == 'chemical/x-datasheet') {
             let ds = DataSheetStream.readXML(datastr);
@@ -10666,6 +10728,7 @@ class Dialog {
 class ImportReaction extends Dialog {
     constructor() {
         super();
+        this.onImport = null;
         this.xs = null;
         this.facet = EmbedReactionFacet.SCHEME.toString();
         this.rows = [];
@@ -10709,7 +10772,13 @@ class ImportReaction extends Dialog {
     }
     actionImport() {
         let row = this.rows[this.selected];
-        console.log('FACET=' + this.facet + ' ROW=' + row);
+        let rowXS = new Experiment();
+        rowXS.addEntry(this.xs.getEntry(row));
+        let xml = DataSheetStream.writeXML(rowXS.ds);
+        let content = '[reaction facet="' + this.facet + '" encoding="base64"]\n';
+        content += btoa(toUTF8(xml));
+        content += '\n[/reaction]';
+        this.onImport(content);
         this.close();
     }
     showError(msg) {
@@ -17225,37 +17294,6 @@ function molpress_RenderCollection(id, options) {
     new EmbedCollection(datastr, options).render(span);
     span.css('display', 'block');
 }
-$ = jQuery;
-jQuery(document).ready(() => {
-    tinymce.create('tinymce.plugins.molpress_plugin', {
-        'init': function (ed, url) {
-            RPC.RESOURCE_URL = url + '/res';
-            ed.addButton('molpress_molecule_button', {
-                'title': 'Molecule',
-                'image': url + '/img/molecule.svg',
-                'onclick': () => {
-                    let dlg = new EditCompound(new Molecule());
-                    dlg.onSave(() => {
-                        let molstr = dlg.getMolecule().toString();
-                        let prehtml = molstr.trim().split('\n').join('<br>');
-                        ed.execCommand('mceInsertContent', false, '<br>[molecule]' + prehtml + '[/molecule]<br>');
-                        dlg.close();
-                    });
-                    dlg.open();
-                }
-            });
-            ed.addButton('molpress_reaction_button', {
-                'title': 'Reaction',
-                'image': url + '/img/reaction.svg',
-                'onclick': () => {
-                    let dlg = new ImportReaction();
-                    dlg.open();
-                }
-            });
-        },
-    });
-    tinymce.PluginManager.add('molpress_plugin', tinymce.plugins.molpress_plugin);
-});
 class SARTable extends Aspect {
     constructor(ds, allowModify) {
         super(ds, allowModify);

@@ -67,8 +67,7 @@ function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
 
 function molpress_init()
 {
-    // this gets loaded during the plugin instead
-    //wp_enqueue_script('js_molpress', plugin_dir_url(__FILE__) . 'molpress.js');
+    wp_enqueue_script('js_molpress', plugin_dir_url(__FILE__) . 'molpress.js');
 
     wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
 
@@ -85,7 +84,7 @@ function molpress_init()
 
 function molpress_add_plugin($plugin_array) 
 {
-    $plugin_array['molpress_plugin'] = plugin_dir_url(__FILE__) . '/molpress.js';
+    $plugin_array['molpress_plugin'] = plugin_dir_url(__FILE__) . '/molpress_mce.js';
     return $plugin_array;
 }
 

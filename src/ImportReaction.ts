@@ -37,6 +37,8 @@
 
 class ImportReaction extends Dialog
 {
+	public onImport:(content:string) => void = null;
+
 	private btnImport:JQuery;
 
 	private xs:Experiment = null;
@@ -106,9 +108,15 @@ class ImportReaction extends Dialog
 	private actionImport():void
 	{
 		let row = this.rows[this.selected];
-		console.log('FACET='+this.facet+' ROW='+row);
-		// !! ...
+		let rowXS = new Experiment();
+		rowXS.addEntry(this.xs.getEntry(row));
+		let xml = DataSheetStream.writeXML(rowXS.ds);
 
+		let content = '[reaction facet="' + this.facet + '" encoding="base64"]\n';
+		content += btoa(toUTF8(xml));
+		content += '\n[/reaction]';
+
+		this.onImport(content);
 		this.close();
 	}
 
@@ -117,7 +125,6 @@ class ImportReaction extends Dialog
 	{
 		this.body().text(msg);
 		this.btnImport.prop('disabled', true);
-	
 	}
 
 	// receive text of arbitrary format

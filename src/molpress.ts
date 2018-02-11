@@ -30,8 +30,6 @@
 ///<reference path='../../WebMolKit/src/dialog/EditCompound.ts'/>
 ///<reference path='ImportReaction.ts'/>
 
-declare var tinymce:any;
-
 // render a molecular structure, using the given parameters: see the EmbedMolecule class for details
 function molpress_RenderMolecule(id:string, options:any)
 {
@@ -124,48 +122,3 @@ function molpress_RenderCollection(id:string, options:any)
     new EmbedCollection(datastr, options).render(span);
 	span.css('display', 'block');
 }
-
-$ = jQuery;
-
-// add a button to the editor for inserting a molecule
-jQuery(document).ready(() =>
-{
-    tinymce.create('tinymce.plugins.molpress_plugin', 
-    {
-        'init' : function(ed:any, url:string) 
-        {
-            RPC.RESOURCE_URL = url + '/res';
-            ed.addButton('molpress_molecule_button', 
-            {
-                'title' : 'Molecule',
-                'image' : url + '/img/molecule.svg',
-                'onclick' : () =>
-                {
-                    // (try to fetch selected molecule, if any)
-                    let dlg = new EditCompound(new Molecule());
-                    dlg.onSave(() =>
-                    {
-                        let molstr = dlg.getMolecule().toString();
-                        let prehtml = molstr.trim().split('\n').join('<br>');
-                        ed.execCommand('mceInsertContent', false, '<br>[molecule]' + prehtml + '[/molecule]<br>');
-                        dlg.close();
-                    });
-                    dlg.open();
-                }
-            });
-            ed.addButton('molpress_reaction_button', 
-            {
-                'title' : 'Reaction',
-                'image' : url + '/img/reaction.svg',
-                'onclick' : () =>
-                {
-                    let dlg = new ImportReaction();
-                    // !! setup callbacks...
-                    dlg.open();
-                }
-            });
-        },  
-    });
-
-    tinymce.PluginManager.add('molpress_plugin', tinymce.plugins.molpress_plugin);
-});
