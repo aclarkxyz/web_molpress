@@ -1,7 +1,7 @@
 /*
     MolSync
 
-    (c) 2010-2016 Molecular Materials Informatics, Inc.
+    (c) 2010-2018 Molecular Materials Informatics, Inc.
 
     All rights reserved
     
@@ -9,6 +9,11 @@
 
 	[PKG=molsync]
 */
+
+.wmk-dialog
+{
+	font-family: 'Open Sans', sans-serif;
+}
 
 /* standard buttons */
 
@@ -278,4 +283,5 @@ fieldset[disabled] .button-primary.focus
     -moz-user-select: none; /* mozilla browsers */
     -khtml-user-select: none; /* webkit (konqueror) browsers */
     -ms-user-select: none; /* IE10+ */
+    user-select: none; /* IE10+ */
 }

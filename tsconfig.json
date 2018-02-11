@@ -5,12 +5,13 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "outFile": "bin/webmolkit-build.js",
+        "outFile": "molpress.js",
         "sourceMap": true,
         "target": "ES6"
     },
     "include": 
     [
+        "src/**/*.ts",
         "../WebMolKit/src/**/*.ts"
     ]
 }
