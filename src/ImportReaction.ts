@@ -100,6 +100,8 @@ class ImportReaction extends Dialog
 			return false;
 		};
 		document.addEventListener('paste', pasteFunc);
+
+		this.btnImport.focus();
 	}
 
 	// ------------ private methods ------------

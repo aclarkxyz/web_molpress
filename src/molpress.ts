@@ -40,7 +40,7 @@ function molpress_RenderMolecule(id:string, options:any)
     if (options.source)
     {
         span.empty();
-        $.ajax(null,
+        $.ajax(
         {
             'url': options.source, 
             'type': 'GET',

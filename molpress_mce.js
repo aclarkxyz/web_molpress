@@ -26,9 +26,10 @@ $ = jQuery;
 // add a button to the editor for inserting a molecule
 jQuery(document).ready(() =>
 {
+	let plug = new ShortcodeIntegration();
     tinymce.create('tinymce.plugins.molpress_plugin', 
     {
-        'init' : function(ed, url) 
+        'init' : (ed, url) =>
         {
             RPC.RESOURCE_URL = url + '/res';
             ed.addButton('molpress_molecule_button', 
@@ -42,8 +43,9 @@ jQuery(document).ready(() =>
                     dlg.onSave(() =>
                     {
                         let molstr = dlg.getMolecule().toString();
-                        let prehtml = molstr.trim().split('\n').join('<br>');
-                        ed.execCommand('mceInsertContent', false, '<br>[molecule]' + prehtml + '[/molecule]<br>');
+						let prehtml = molstr.trim().split('\n').join('<br>\n');
+						let content = '<br>[molecule]' + prehtml + '[/molecule]<br>';
+                        ed.execCommand('mceInsertContent', false, plug.preprocess(content));
                         dlg.close();
                     });
                     dlg.open();
@@ -56,11 +58,15 @@ jQuery(document).ready(() =>
                 'onclick' : () =>
                 {
                     let dlg = new ImportReaction();
-                    dlg.onImport = (content) => ed.execCommand('mceInsertContent', false, content);
+                    dlg.onImport = (content) => ed.execCommand('mceInsertContent', false, plug.preprocess(content));
                     dlg.open();
                 }
-            });
-        },  
+			});
+
+			ed.on('BeforeSetContent', (o) => o.content = plug.preprocess(o.content));
+			//ed.on('Change', (o) => /*o.content = plug.preprocess(o.content)*/ {console.log('CHANGE'); for (let k in o) console.log('['+k+'] [' + o[k] + ']');});
+			ed.on('PostProcess', (o) => o.content = plug.postprocess(o.content));
+        }
     });
 
     tinymce.PluginManager.add('molpress_plugin', tinymce.plugins.molpress_plugin);
