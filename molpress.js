@@ -10809,7 +10809,23 @@ class ImportReaction extends Dialog {
         this.btnImport.prop('disabled', false);
     }
     acquireBinary(filename, data) {
-        this.showError('Unknown binary format.');
+        var bytes = new Uint8Array(data);
+        let lines = [], stripe = '';
+        const sz = bytes.length;
+        for (let n = 0; n < sz; n++) {
+            stripe += String.fromCharCode(bytes[n]);
+            if (stripe.length > 100) {
+                lines.push(stripe);
+                stripe = '';
+            }
+        }
+        lines.push(stripe);
+        try {
+            this.acquireText(fromUTF8(lines.join('')));
+        }
+        catch (_a) {
+            this.showError('Unknown binary format.');
+        }
     }
     dropInto(transfer) {
         let items = transfer.items;

@@ -161,7 +161,20 @@ class ImportReaction extends Dialog
 	// receive binary content of arbitrary format
 	private acquireBinary(filename:string, data:ArrayBuffer):void
 	{
-		this.showError('Unknown binary format.');
+		//this.showError('Unknown binary format.');
+		
+		// postulate that it's UTF8 text of some kind, and give it a try
+		var bytes = new Uint8Array(data);
+		let lines:string[] = [], stripe = '';
+		const sz = bytes.length;
+		for (let n = 0; n < sz; n++)
+		{
+			stripe += String.fromCharCode(bytes[n]);
+			if (stripe.length > 100) {lines.push(stripe); stripe = '';}
+		}
+		lines.push(stripe);
+		try {this.acquireText(fromUTF8(lines.join('')));}
+		catch {this.showError('Unknown binary format.');}
 	}
 
 	// something was dragged into the sketcher area
