@@ -30,8 +30,12 @@
 ///<reference path='../../WebMolKit/src/dialog/EditCompound.ts'/>
 ///<reference path='ImportReaction.ts'/>
 
+import wmk = WebMolKit;
+
+namespace MolPress /* BOF */ {
+
 // render a molecular structure, using the given parameters: see the EmbedMolecule class for details
-function molpress_RenderMolecule(id:string, options:any)
+export function RenderMolecule(id:string, options:any)
 {
     if (!options) options = {};
 	let span = $('#' + id);
@@ -47,7 +51,7 @@ function molpress_RenderMolecule(id:string, options:any)
             'dataType': 'text',
             'success': (molstr:string) =>
             {
-                new EmbedMolecule(molstr, options).render(span);
+                new wmk.EmbedMolecule(molstr, options).render(span);
                 span.css('display', 'block');
             },
             'error': () => {console.log('Unable to load source: ' + options.source);}
@@ -57,12 +61,12 @@ function molpress_RenderMolecule(id:string, options:any)
 
     let molstr = span.text();
     span.empty();
-    new EmbedMolecule(molstr, options).render(span);
+    new wmk.EmbedMolecule(molstr, options).render(span);
 	span.css('display', 'block');
 }
 
 // render a single reaction experiment, using the given parameters: see the EmbedReaction class for details
-function molpress_RenderReaction(id:string, options:any)
+export function RenderReaction(id:string, options:any)
 {
     if (!options) options = {};
 	let span = $('#' + id);
@@ -78,7 +82,7 @@ function molpress_RenderReaction(id:string, options:any)
             'dataType': 'text',
             'success': (datastr:string) =>
             {
-                new EmbedReaction(datastr, options).render(span);
+                new wmk.EmbedReaction(datastr, options).render(span);
                 span.css('display', 'block');
             },
             'error': () => {console.log('Unable to load source: ' + options.source);}
@@ -88,12 +92,12 @@ function molpress_RenderReaction(id:string, options:any)
 
     let datastr = span.text();
     span.empty();
-    new EmbedReaction(datastr, options).render(span);
+    new wmk.EmbedReaction(datastr, options).render(span);
 	span.css('display', 'block');
 }
 
 // render a collection of molecular objects and miscellany, using the given parameters: see the EmbedCollection class for details
-function molpress_RenderCollection(id:string, options:any)
+export function RenderCollection(id:string, options:any)
 {
     if (!options) options = {};
 	let span = $('#' + id);
@@ -109,7 +113,7 @@ function molpress_RenderCollection(id:string, options:any)
             'dataType': 'text',
             'success': (datastr:string) =>
             {
-                new EmbedCollection(datastr, options).render(span);
+                new wmk.EmbedCollection(datastr, options).render(span);
                 span.css('display', 'block');
             },
             'error': () => {console.log('Unable to load source: ' + options.source);}
@@ -119,6 +123,8 @@ function molpress_RenderCollection(id:string, options:any)
 
     let datastr = span.text();
     span.empty();
-    new EmbedCollection(datastr, options).render(span);
+    new wmk.EmbedCollection(datastr, options).render(span);
 	span.css('display', 'block');
 }
+
+/* EOF */ }

@@ -26,7 +26,7 @@ function molpress_shortcode_molecule($atts = [], $content = null, $tag = '')
     if (!is_null($content)) $o .= '<pre>' . $content . '</pre>';
 
     $o .= '</span>';
-    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderMolecule("' . $id . '",' . json_encode($atts) . ');});</script>';
+    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {MolPress.RenderMolecule("' . $id . '",' . json_encode($atts) . ');});</script>';
  
     return $o;
 }
@@ -43,7 +43,7 @@ function molpress_shortcode_reaction($atts = [], $content = null, $tag = '')
     if (!is_null($content)) $o .= '<pre>' . $content . '</pre>';
 
     $o .= '</span>';
-    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderReaction("' . $id . '",' . json_encode($atts) . ');});</script>';
+    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {MolPress.RenderReaction("' . $id . '",' . json_encode($atts) . ');});</script>';
  
     return $o;
 }
@@ -60,7 +60,7 @@ function molpress_shortcode_collection($atts = [], $content = null, $tag = '')
     if (!is_null($content)) $o .= '<script type="text/xml">' . $content . '</script>';
 
     $o .= '</span>';
-    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {molpress_RenderCollection("' . $id . '",' . json_encode($atts) . ');});</script>';
+    $o .= '<script>var $; if (!$) $ = jQuery; $(document).ready(function($) {MolPress.RenderCollection("' . $id . '",' . json_encode($atts) . ');});</script>';
  
     return $o;
 }
@@ -69,7 +69,7 @@ function molpress_init()
 {
     wp_enqueue_script('js_molpress', plugin_dir_url(__FILE__) . 'molpress.js?cachebuster=' . time());
 
-    wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
+    //wp_enqueue_style('molpress_widgets',  plugin_dir_url(__FILE__) . 'res/widgets.css', false, '1.0.0', 'all');
 
     add_shortcode('molecule', 'molpress_shortcode_molecule');
     add_shortcode('reaction', 'molpress_shortcode_reaction');

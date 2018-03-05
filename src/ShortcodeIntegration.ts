@@ -25,11 +25,13 @@
 ///<reference path='../../WebMolKit/src/decl/jquery.d.ts'/>
 ///<reference path='../../WebMolKit/src/util/util.ts'/>
 
+namespace MolPress /* BOF */ {
+
 /*
 	Integration with the WordPress TinyMCE editor, to display chemical objects in WYSIWYG mode.
 */
 
-class ShortcodeIntegration
+export class ShortcodeIntegration
 {
 	private SHORTCODES = ['molecule', 'reaction', 'collection'];
 	private watermark = 0;
@@ -149,9 +151,9 @@ class ShortcodeIntegration
 
 			para.empty();
 
-			if (code == 'molecule') new EmbedMolecule(content, options).render(para);
-			else if (code == 'reaction') new EmbedReaction(content, options).render(para);
-			else if (code == 'collection') new EmbedCollection(content, options).render(para);
+			if (code == 'molecule') new wmk.EmbedMolecule(content, options).render(para);
+			else if (code == 'reaction') new wmk.EmbedReaction(content, options).render(para);
+			else if (code == 'collection') new wmk.EmbedCollection(content, options).render(para);
 		};
 
 		let placeholder = 'loading';
@@ -160,7 +162,7 @@ class ShortcodeIntegration
 		{
 			placeholder = 'collections are shown in preview';
 		}
-		else if (code == 'reaction' && (options.facet && options.facet != EmbedReactionFacet.SCHEME))
+		else if (code == 'reaction' && (options.facet && options.facet != wmk.EmbedReactionFacet.SCHEME))
 		{
 			placeholder = 'reaction details are shown in preview';
 		}
@@ -214,3 +216,5 @@ class ShortcodeIntegration
 		return html;
 	}
 }
+
+/* EOF */ }

@@ -26,12 +26,12 @@ $ = jQuery;
 // add a button to the editor for inserting a molecule
 jQuery(document).ready(() =>
 {
-	let plug = new ShortcodeIntegration();
+	let plug = new MolPress.ShortcodeIntegration();
     tinymce.create('tinymce.plugins.molpress_plugin', 
     {
         'init' : (ed, url) =>
         {
-            RPC.RESOURCE_URL = url + '/res';
+            WebMolKit.initWebMolKit(url + '/res');
             ed.addButton('molpress_molecule_button', 
             {
                 'title' : 'Molecule',
@@ -39,7 +39,7 @@ jQuery(document).ready(() =>
                 'onclick' : () =>
                 {
                     // (try to fetch selected molecule, if any)
-                    let dlg = new EditCompound(new Molecule());
+                    let dlg = new WebMolKit.EditCompound(new Molecule());
                     dlg.onSave(() =>
                     {
                         let molstr = dlg.getMolecule().toString();
@@ -57,7 +57,7 @@ jQuery(document).ready(() =>
                 'image' : url + '/img/reaction.svg',
                 'onclick' : () =>
                 {
-                    let dlg = new ImportReaction();
+                    let dlg = new MolPress.ImportReaction();
                     dlg.onImport = (content) => ed.execCommand('mceInsertContent', false, plug.preprocess(content));
                     dlg.open();
                 }

@@ -31,18 +31,20 @@
 ///<reference path='../../WebMolKit/src/ui/OptionList.ts'/>
 ///<reference path='../../WebMolKit/src/dialog/Dialog.ts'/>
 
+namespace MolPress /* BOF */ {
+
 /*
 	Brings up a panel that invites the user to provide a reaction from some source, and then do something with it.
 */
 
-class ImportReaction extends Dialog
+export class ImportReaction extends WebMolKit.Dialog
 {
 	public onImport:(content:string) => void = null;
 
 	private btnImport:JQuery;
 
-	private xs:Experiment = null;
-	private facet = EmbedReactionFacet.SCHEME.toString();
+	private xs:wmk.Experiment = null;
+	private facet = wmk.EmbedReactionFacet.SCHEME.toString();
 	private rows:number[] = [];
 	private selected = 0;
 
@@ -110,12 +112,12 @@ class ImportReaction extends Dialog
 	private actionImport():void
 	{
 		let row = this.rows[this.selected];
-		let rowXS = new Experiment();
+		let rowXS = new wmk.Experiment();
 		rowXS.addEntry(this.xs.getEntry(row));
-		let xml = DataSheetStream.writeXML(rowXS.ds);
+		let xml = wmk.DataSheetStream.writeXML(rowXS.ds);
 
 		let content = '[reaction facet="' + this.facet + '" encoding="base64"]\n';
-		content += btoa(toUTF8(xml));
+		content += btoa(wmk.toUTF8(xml));
 		content += '\n[/reaction]';
 
 		this.onImport(content);
@@ -132,8 +134,8 @@ class ImportReaction extends Dialog
 	// receive text of arbitrary format
 	public acquireText(str:string):void
 	{
-		let ds:DataSheet = null;
-		try {ds = DataSheetStream.readXML(str);}
+		let ds:wmk.DataSheet = null;
+		try {ds = wmk.DataSheetStream.readXML(str);}
 		catch {} // silent
 
 		if (ds == null)
@@ -142,7 +144,7 @@ class ImportReaction extends Dialog
 			this.showError('Unrecognised format.');
 			return;
 		}
-		else if (!Experiment.isExperiment(ds))
+		else if (!wmk.Experiment.isExperiment(ds))
 		{
 			this.showError('DataSheet does not contain the Experiment aspect that is needed to describe a chemical reaction.');
 			return;
@@ -153,7 +155,7 @@ class ImportReaction extends Dialog
 			return;
 		}
 
-		this.xs = new Experiment(ds);
+		this.xs = new wmk.Experiment(ds);
 		this.createContent();
 		this.btnImport.prop('disabled', false);
 	}
@@ -173,7 +175,7 @@ class ImportReaction extends Dialog
 			if (stripe.length > 100) {lines.push(stripe); stripe = '';}
 		}
 		lines.push(stripe);
-		try {this.acquireText(fromUTF8(lines.join('')));}
+		try {this.acquireText(wmk.fromUTF8(lines.join('')));}
 		catch {this.showError('Unknown binary format.');}
 	}
 
@@ -207,18 +209,18 @@ class ImportReaction extends Dialog
 
 		let xs = this.xs, ds = xs.ds;
 
-		this.facet = EmbedReactionFacet.SCHEME.toString();
-		let facetOpt = new OptionList(['Header', 'Scheme', 'Quantity', 'Metrics']);
+		this.facet = wmk.EmbedReactionFacet.SCHEME.toString();
+		let facetOpt = new wmk.OptionList(['Header', 'Scheme', 'Quantity', 'Metrics']);
 		facetOpt.setSelectedIndex(1);
 		facetOpt.render($('<p></p>').appendTo(body));
-		let facetValues = [EmbedReactionFacet.HEADER, EmbedReactionFacet.SCHEME, EmbedReactionFacet.QUANTITY, EmbedReactionFacet.METRICS];
+		let facetValues = [wmk.EmbedReactionFacet.HEADER, wmk.EmbedReactionFacet.SCHEME, wmk.EmbedReactionFacet.QUANTITY, wmk.EmbedReactionFacet.METRICS];
 		facetOpt.callbackSelect = (idx:number) => this.facet = facetValues[facetOpt.getSelectedIndex()].toString();	
 
 		let table = $('<table></table>').appendTo($('<p></p>').appendTo(body));
 		table.css('border-collapse', 'collapse');
 		let radioList:JQuery[] = ds.numRows == xs.rowBlockCount(0) ? null : [];
 
-		let policy = RenderPolicy.defaultColourOnWhite();
+		let policy = wmk.RenderPolicy.defaultColourOnWhite();
 
 		this.selected = 0;
 		this.rows = [];
@@ -237,16 +239,16 @@ class ImportReaction extends Dialog
 			let tdRxn = $('<td></td>').appendTo(tr);
 			tdRxn.css('border', '1px solid #808080');
 
-			let measure = new OutlineMeasurement(0, 0, policy.data.pointScale);
-			let layout = new ArrangeExperiment(xs.getEntry(n), measure, policy);
+			let measure = new wmk.OutlineMeasurement(0, 0, policy.data.pointScale);
+			let layout = new wmk.ArrangeExperiment(xs.getEntry(n), measure, policy);
 			layout.limitTotalW = 1000;
 			layout.includeStoich = true;
 			layout.includeAnnot = true;
 	
 			layout.arrange();
 	
-			let metavec = new MetaVector();
-			new DrawExperiment(layout, metavec).draw();
+			let metavec = new wmk.MetaVector();
+			new wmk.DrawExperiment(layout, metavec).draw();
 			metavec.normalise();
 			let svg = $(metavec.createSVG()).appendTo(tdRxn);
 		}
@@ -263,3 +265,5 @@ class ImportReaction extends Dialog
 		}
 	}
 }
+
+/* EOF */ }
